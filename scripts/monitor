@@ -1,0 +1,41 @@
+from auth import AzureClient
+from datetime import datetime, timedelta
+
+class AzureMonitor:
+    def __init__(self, subscription_id):
+        self.azure_client = AzureClient(subscription_id)
+        self.resource_client = self.azure_client.get_resource_client()
+    
+    def list_all_resources(self):
+        """List all resources with details"""
+        resources = []
+        print("Scanning all resources in subscription...")
+        
+        for resource in self.resource_client.resources.list():
+            resources.append({
+                "name": resource.name,
+                "type": resource.type,
+                "location": resource.location,
+                "resource_group": resource.id.split('/')[4]
+            })
+        
+        return resources
+    
+    def generate_report(self):
+        """Generate resource usage report"""
+        resources = self.list_all_resources()
+        
+        print("\n=== Azure Resource Report ===")
+        print(f"Total Resources: {len(resources)}")
+        print(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print("\nResources by Type:")
+        
+        resource_types = {}
+        for resource in resources:
+            rtype = resource['type']
+            resource_types[rtype] = resource_types.get(rtype, 0) + 1
+        
+        for rtype, count in resource_types.items():
+            print(f"  {rtype}: {count}")
+        
+        return resources
